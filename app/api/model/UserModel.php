@@ -7,6 +7,7 @@ use think\Db;   // 调用数据库
 
 class UserModel extends Model
 {
+    protected $pk = 'id';
 
     public function getUserbyId($name = 1)
     {
