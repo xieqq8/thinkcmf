@@ -25,8 +25,8 @@
 //    "authcode" => 'CviMdXkZ3vUxyJCwNt',
 //];
 
-// 这里不起作用
-// api 模块DB 配置
+
+// api 模块DB 配置  // 这里不起作用是runtime?  删了就好了
 return [
     // 数据库类型
     'type'        => 'mysql',
@@ -35,11 +35,11 @@ return [
     // 服务器地址
     'hostname'    => '127.0.0.1',
     // 数据库名
-    'database'    => 'tp5cmf2',
+    'database'    => 'tp5cmf',
     // 数据库用户名
     'username'    => 'root',
     // 数据库密码
-    'password'    => '123123111',
+    'password'    => '123123',
     // 数据库连接端口
     'hostport'    => '3306',
     // 数据库连接参数 具体的连接参数可以参考PHP手册
