@@ -75,7 +75,8 @@ class UserController extends Controller {
 //        $data2['token'] = '';
 //        return json($data2);
 
-        $data =  input('post.json');
+//        $data =  input('post.');
+//        dump($data);
 
 //        if(IS_POST){
 //            $data = input(
@@ -86,8 +87,9 @@ class UserController extends Controller {
         // file_get_contents 该函数是用于把文件的内容读入到一个字符串中的首选方法。如果服务器操作系统支持，还会使用内存映射技术来增强性能。
         // php://input 是个可以访问请求的原始数据的只读流。
         $params = urldecode(file_get_contents("php://input"));
+        var_dump($params);
+
 //        json_encode($data);
-        var_dump($data);
         if($params){
             $data = json_decode($params , true);
             if(empty($data['signValue']) || empty($data['phone']) || empty($data['password'])){

@@ -38,7 +38,7 @@ class IndexController extends Controller
         return xml(['data' => $data, 'code' => 1, 'message' => '操作完成']);
     }
 
-    public function hello($name = 'thinkphp5')
+    public function hello($name = 'tp5')
     {
         $this->assign('name', $name);  // 继承 thinkphp\Controller assign
         return $this->fetch();

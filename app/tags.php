@@ -11,7 +11,7 @@
 return [
     // 应用初始化
     'app_init'     => [
-        'cmf\\behavior\\InitHookBehavior',
+//        'cmf\\behavior\\InitHookBehavior',
     ],
     // 应用开始
     'app_begin'    => [
@@ -30,8 +30,10 @@ return [
     // 应用开始
     'admin_init'   => [
         'cmf\\behavior\\AdminLangBehavior',
+        'cmf\\behavior\\InitHookBehavior',
     ],
     'home_init'    => [
         'cmf\\behavior\\HomeLangBehavior',
+        'cmf\\behavior\\InitHookBehavior',
     ]
 ];
