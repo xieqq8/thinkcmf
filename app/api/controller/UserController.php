@@ -6,6 +6,8 @@ use think\Controller;
 use think\Controller\Rest;
 use think\Db;   // 调用数据库
 
+use app\portal\service\PostService;
+
 use app\api\model\UserModel;
 
 //
@@ -67,6 +69,29 @@ class UserController extends Controller
 //        }
 //    }
 
+    /**
+     * get 返回
+     * json数组
+     */
+    public function  getListContent(){
+        $param = "[]"; // 空数组
+        $postService = new PostService();
+        $data        = $postService->adminArticleList($param);
+
+        $data2['code'] = '200';
+        $data2['msg'] = '成功';
+        $data2['data'] = $data; // 查询返回
+//        $this->response($data, 'json', 200);
+        return json($data2);
+
+//        $data = ['name' => 'thinkphp', 'url' => 'thinkphp.cn'];
+//        return json(['data' => $data, 'code' => 1, 'message' => '操作完成']);
+    }
+
+    /**
+     * 登录post 测试
+     * @return \think\response\Json
+     */
     public function login()
     {
         // form-data的时候这样接收

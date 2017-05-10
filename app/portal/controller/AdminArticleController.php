@@ -33,7 +33,7 @@ class AdminArticleController extends AdminBaseController
     public function index()
     {
         $param = $this->request->param();
-
+//        var_dump($param);
         $categoryId = $this->request->param('category', 0, 'intval');
 
         $postService = new PostService();
