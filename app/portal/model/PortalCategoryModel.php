@@ -8,6 +8,7 @@
 // +----------------------------------------------------------------------
 namespace app\portal\model;
 
+use app\admin\model\RouteModel;
 use think\Model;
 use tree\Tree;
 
@@ -149,31 +150,33 @@ class PortalCategoryModel extends Model
         if (empty($oldCategory) || empty($newPath)) {
             $result = false;
         } else {
-            self::startTrans();
-            try {
 
-                $data['path'] = $newPath;
-                if (!empty($data['more']['thumbnail'])) {
-                    $data['more']['thumbnail'] = cmf_asset_relative_url($data['more']['thumbnail']);
-                }
-                $this->isUpdate(true)->allowField(true)->save($data, ['id' => $id]);
 
-                $children = $this->field('id,path')->where('path', 'like', "%-$id-%")->select();
-
-                if (!empty($children)) {
-                    foreach ($children as $child) {
-                        $childPath = str_replace($oldCategory['path'] . '-', $newPath . '-', $child['path']);
-                        $this->isUpdate(true)->save(['path' => $childPath], ['id' => $child['id']]);
-                    }
-                }
-
-                self::commit();
-
-            } catch (\Exception $e) {
-                print_r($e);
-                self::rollback();
-                $result = false;
+            $data['path'] = $newPath;
+            if (!empty($data['more']['thumbnail'])) {
+                $data['more']['thumbnail'] = cmf_asset_relative_url($data['more']['thumbnail']);
             }
+            $this->isUpdate(true)->allowField(true)->save($data, ['id' => $id]);
+
+            $children = $this->field('id,path')->where('path', 'like', "%-$id-%")->select();
+
+            if (!empty($children)) {
+                foreach ($children as $child) {
+                    $childPath = str_replace($oldCategory['path'] . '-', $newPath . '-', $child['path']);
+                    $this->isUpdate(true)->save(['path' => $childPath], ['id' => $child['id']]);
+                }
+            }
+
+            $routeModel = new RouteModel();
+            if (!empty($data['alias'])) {
+                $routeModel->setRoute($data['alias'], 'portal/List/index', ['id' => $data['id']], 2, 5000);
+                $routeModel->setRoute($data['alias'] . '/:id', 'portal/Article/index', ['cid' => $data['id']], 2, 4999);
+            } else {
+                $routeModel->deleteRoute('portal/List/index', ['id' => $data['id']]);
+                $routeModel->deleteRoute('portal/Article/index', ['cid' => $data['id']]);
+            }
+
+            $routeModel->getRoutes(true);
         }
 
 
