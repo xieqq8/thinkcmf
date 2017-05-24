@@ -18,35 +18,63 @@ class StorageController extends AdminBaseController
         parent::_initialize();
     }
 
-    // 文件存储设置
+    /**
+     * 文件存储
+     * @adminMenu(
+     *     'name'   => '文件存储',
+     *     'parent' => 'admin/Setting/default',
+     *     'display'=> true,
+     *     'hasView'=> true,
+     *     'order'  => 10000,
+     *     'icon'   => '',
+     *     'remark' => '文件存储',
+     *     'param'  => ''
+     * )
+     */
     public function index()
     {
-        $this->assign(cmf_get_option('storage'));
+        $storage = cmf_get_option('storage');
+
+        if (empty($storage)) {
+            $storage['type']     = 'Local';
+            $storage['storages'] = ['Local' => ['name' => '本地']];
+        } else {
+            if (empty($storage['type'])) {
+                $storage['type'] = 'Local';
+            }
+
+            if (empty($storage['storages']['Local'])) {
+                $storage['storages']['Local'] = ['name' => '本地'];
+            }
+        }
+
+        $this->assign($storage);
         return $this->fetch();
     }
 
-    // 文件存储设置提交
+    /**
+     * 文件存储
+     * @adminMenu(
+     *     'name'   => '文件存储设置提交',
+     *     'parent' => 'index',
+     *     'display'=> false,
+     *     'hasView'=> false,
+     *     'order'  => 10000,
+     *     'icon'   => '',
+     *     'remark' => '文件存储设置提交',
+     *     'param'  => ''
+     * )
+     */
     public function settingPost()
     {
-        if (IS_POST) {
+        $post = $this->request->post();
 
-            $supportStorages = ["Local", "Qiniu"];
-            $type            = I('post.type');
-            $post            = I('post.');
-            if (in_array($type, $supportStorages)) {
-                $result = sp_set_cmf_setting(['storage' => $post]);
-                if ($result !== false) {
-                    unset($post[$type]['setting']);
-                    sp_set_dynamic_config(["FILE_UPLOAD_TYPE" => $type, "UPLOAD_TYPE_CONFIG" => $post[$type]]);
-                    $this->success("设置成功！");
-                } else {
-                    $this->error("设置出错！");
-                }
-            } else {
-                $this->error("文件存储类型不存在！");
-            }
+        $storage = cmf_get_option('storage');
 
-        }
+        $storage['type'] = $post['type'];
+        cmf_set_option('storage', $storage);
+        $this->success("设置成功！", '');
+
     }
 
 

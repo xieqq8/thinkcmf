@@ -7,7 +7,8 @@
     <include file="public@head"/>
     <style>
         #article_content img {
-            height: auto !important
+            height: auto !important;
+            max-width: 100%;
         }
 
         #article_content {
@@ -61,7 +62,7 @@
                     ];
                 </php>
 
-                {:hook('comment',$comment_hook_param)}
+                <hook name="comment" param="comment_hook_param"/>
             </div>
 
 

@@ -47,7 +47,17 @@ class PortalPostModel extends Model
      */
     public function getPostContentAttr($value)
     {
-        return htmlspecialchars_decode($value);
+        return cmf_replace_content_file_url(htmlspecialchars_decode($value));
+    }
+
+    /**
+     * post_content 自动转化
+     * @param $value
+     * @return string
+     */
+    public function setPostContentAttr($value)
+    {
+        return htmlspecialchars(cmf_replace_content_file_url(htmlspecialchars_decode($value), true));
     }
 
     /**
@@ -132,7 +142,7 @@ class PortalPostModel extends Model
                 $recycleData = [
                     'object_id'   => $res['id'],
                     'create_time' => time(),
-                    'table_name'  => 'portal_post',
+                    'table_name'  => 'portal_post#page',
                     'name'        => $res['post_title'],
 
                 ];

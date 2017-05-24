@@ -73,6 +73,25 @@ class UserController extends Controller
      * get 返回
      * json数组
      */
+    public function  server_time(){
+        $param = "[]"; // 空数组
+        $postService = new PostService();
+//        $data        = $postService->adminArticleList($param);
+
+        $data2['date1'] = date('Y-m-d H:i:s');
+        $data2['date3'] = time();
+        $data2['date2'] = time(); // 查询返回
+//        $this->response($data, 'json', 200);
+        return json($data2);
+
+//        $data = ['name' => 'thinkphp', 'url' => 'thinkphp.cn'];
+//        return json(['data' => $data, 'code' => 1, 'message' => '操作完成']);
+    }
+
+    /**
+     * get 返回
+     * json数组
+     */
     public function  getListContent(){
         $param = "[]"; // 空数组
         $postService = new PostService();

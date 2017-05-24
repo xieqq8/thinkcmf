@@ -88,6 +88,13 @@ class IndexController extends Controller
             $err++;
         }
 
+        if (extension_loaded('fileinfo')) {
+            $data['fileinfo'] = '<i class="fa fa-check correct"></i> 已开启';
+        } else {
+            $data['fileinfo'] = '<i class="fa fa-remove error"></i> 未开启';
+            $err++;
+        }
+
         if (ini_get('file_uploads')) {
             $data['upload_size'] = '<i class="fa fa-check correct"></i> ' . ini_get('upload_max_filesize');
         } else {
@@ -99,6 +106,15 @@ class IndexController extends Controller
         } else {
             $data['session'] = '<i class="fa fa-remove error"></i> 不支持';
             $err++;
+        }
+
+        if (version_compare(phpversion(), '5.6.0', '>=') && version_compare(phpversion(), '7.0.0', '<') && ini_get('always_populate_raw_post_data') != -1) {
+            $data['always_populate_raw_post_data'] = '<i class="fa fa-remove error"></i> 未关闭';
+            $data['show_always_populate_raw_post_data_tip']=true;
+            $err++;
+        } else {
+
+            $data['always_populate_raw_post_data'] = '<i class="fa fa-check correct"></i> 已关闭';
         }
 
         $folders    = [
@@ -156,7 +172,7 @@ class IndexController extends Controller
 
             session('install.db_config', $dbConfig);
 
-            $sql = sp_split_sql('thinkcmf.sql', $dbConfig['prefix'], $dbConfig['charset']);
+            $sql = cmf_split_sql(APP_PATH . 'install/data/thinkcmf.sql', $dbConfig['prefix'], $dbConfig['charset']);
             session('install.sql', $sql);
 
             $this->assign('sql_count', count($sql));
@@ -194,21 +210,15 @@ class IndexController extends Controller
     public function install()
     {
         $dbConfig = session('install.db_config');
+        $sql      = session('install.sql');
 
-        if (empty($dbConfig)) {
+        if (empty($dbConfig) || empty($sql)) {
             $this->error("非法安装!");
         }
 
         $sqlIndex = $this->request->param('sql_index', 0, 'intval');
 
         $db = Db::connect($dbConfig);
-
-        $sql = session('install.sql');
-
-        if (empty($sql)) {
-            $sql = sp_split_sql('thinkcmf.sql', $dbConfig['prefix']);
-            session('install.sql', $sql);
-        }
 
         if ($sqlIndex >= count($sql)) {
             $installError = session('install.error');

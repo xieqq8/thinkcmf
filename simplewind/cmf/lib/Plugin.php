@@ -41,7 +41,7 @@ abstract class Plugin
      *  'version'=>'1.0'
      *  )
      */
-    public $info = array();
+    public $info = [];
     private $pluginPath = '';
     private $name = '';
     private $configFilePath = '';
@@ -63,22 +63,47 @@ abstract class Plugin
 
         $config = $this->getConfig();
 
-
         $theme = isset($config['theme']) ? $config['theme'] : '';
 
         $depr = "/";
 
-        $root = $request->root();
+        $root = cmf_get_root();
 
-        $themeDir = empty($theme) ? "" : $theme . $depr;
+        $themeDir = empty($theme) ? "" : '/' . $theme;
 
-        $themePath = 'view/' . $themeDir;
+        $themePath = 'view' . $themeDir;
 
-        $this->themeRoot = $this->pluginPath . $themePath;
+        $this->themeRoot = $this->pluginPath . $themePath . '/';
 
-        $pluginRoot = $root . "/{$nameCStyle}/";
+        $engineConfig['view_base'] = $this->themeRoot;
 
-        $replaceConfig = ['__PLUGIN_TMPL__' => $pluginRoot . $themePath, '__PLUGIN_ROOT__' => $pluginRoot];
+        $pluginRoot = $root . "/plugins/{$nameCStyle}";
+
+        $cmfAdminThemePath    = config('cmf_admin_theme_path');
+        $cmfAdminDefaultTheme = config('cmf_admin_default_theme');
+
+        $adminThemePath = "{$cmfAdminThemePath}{$cmfAdminDefaultTheme}";
+
+        //使cdn设置生效
+        $cdnSettings = cmf_get_option('cdn_settings');
+        if (empty($cdnSettings['cdn_static_root'])) {
+            $replaceConfig = [
+                '__PLUGIN_TMPL__' => $pluginRoot . '/' . $themePath,
+                '__PLUGIN_ROOT__' => $pluginRoot,
+                '__ADMIN_TMPL__'  => "{$root}/{$adminThemePath}",
+                '__STATIC__'      => "{$root}/static",
+                '__WEB_ROOT__'    => $root
+            ];
+        } else {
+            $cdnStaticRoot = rtrim($cdnSettings['cdn_static_root'], '/');
+            $replaceConfig = [
+                '__PLUGIN_TMPL__' => $cdnStaticRoot . '/' . $pluginRoot . '/' . $themePath,
+                '__PLUGIN_ROOT__' => $cdnStaticRoot . '/' . $pluginRoot,
+                '__ADMIN_TMPL__'  => "{$cdnStaticRoot}/{$adminThemePath}",
+                '__STATIC__'      => "{$cdnStaticRoot}/static",
+                '__WEB_ROOT__'    => $cdnStaticRoot
+            ];
+        }
 
         $this->view = new View($engineConfig, $replaceConfig);
 
@@ -107,7 +132,7 @@ abstract class Plugin
             throw new TemplateNotFoundException('template not exists:' . $template, $template);
         }
 
-        echo $this->view->fetch($template);
+        return $this->view->fetch($template);
     }
 
     /**
@@ -118,7 +143,7 @@ abstract class Plugin
      */
     final protected function display($content = '')
     {
-        echo $this->view->display($content);
+        return $this->view->display($content);
     }
 
     /**
@@ -155,7 +180,7 @@ abstract class Plugin
      */
     final public function checkInfo()
     {
-        $infoCheckKeys = array('name', 'title', 'description', 'status', 'author', 'version');
+        $infoCheckKeys = ['name', 'title', 'description', 'status', 'author', 'version'];
         foreach ($infoCheckKeys as $value) {
             if (!array_key_exists($value, $this->info))
                 return false;
@@ -205,7 +230,7 @@ abstract class Plugin
      */
     final public function getConfig()
     {
-        static $_config = array();
+        static $_config = [];
         $name = $this->getName();
         if (isset($_config[$name])) {
             return $_config[$name];
@@ -229,21 +254,24 @@ abstract class Plugin
      */
     final public function getDefaultConfig()
     {
-        $config  = array();
-        $tempArr = include $this->configFilePath;
-        if (!empty($tempArr)) {
-            foreach ($tempArr as $key => $value) {
-                if ($value['type'] == 'group') {
-                    foreach ($value['options'] as $gkey => $gvalue) {
-                        foreach ($gvalue['options'] as $ikey => $ivalue) {
-                            $config[$ikey] = $ivalue['value'];
+        $config = [];
+        if (file_exists($this->configFilePath)) {
+            $tempArr = include $this->configFilePath;
+            if (!empty($tempArr)) {
+                foreach ($tempArr as $key => $value) {
+                    if ($value['type'] == 'group') {
+                        foreach ($value['options'] as $gkey => $gvalue) {
+                            foreach ($gvalue['options'] as $ikey => $ivalue) {
+                                $config[$ikey] = $ivalue['value'];
+                            }
                         }
+                    } else {
+                        $config[$key] = $tempArr[$key]['value'];
                     }
-                } else {
-                    $config[$key] = $tempArr[$key]['value'];
                 }
             }
         }
+
 
         return $config;
     }

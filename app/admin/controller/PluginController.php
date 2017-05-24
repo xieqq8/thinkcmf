@@ -12,6 +12,7 @@ use cmf\controller\AdminBaseController;
 use app\admin\model\PluginModel;
 use app\admin\model\HookPluginModel;
 use think\Db;
+use think\Validate;
 
 /**
  * Class PluginController
@@ -72,23 +73,42 @@ class PluginController extends AdminBaseController
      */
     public function toggle()
     {
-        $pluginModel = new PluginModel();
+        $id = $this->request->param('id', 0, 'intval');
 
-        if ($this->request->param('enable')) {
-            $id = $this->request->param('id', 0, 'intval');
+        $pluginModel = PluginModel::get($id);
 
-            $pluginModel->save(['status' => 1], ['id' => $id]);
-
-            $this->success("启用成功！");
+        if (empty($pluginModel)) {
+            $this->error('插件不存在！');
         }
+
+        $status         = 1;
+        $successMessage = "启用成功！";
 
         if ($this->request->param('disable')) {
-            $id = $this->request->param('id', 0, 'intval');
-
-            $pluginModel->save(['status' => 0], ['id' => $id]);
-
-            $this->success("禁用成功！");
+            $status         = 0;
+            $successMessage = "禁用成功！";
         }
+
+        $pluginModel->startTrans();
+
+        try {
+            $pluginModel->save(['status' => $status], ['id' => $id]);
+
+            $hookPluginModel = new HookPluginModel();
+
+            $hookPluginModel->save(['status' => $status], ['plugin' => $pluginModel->name]);
+
+            $pluginModel->commit();
+
+        } catch (\Exception $e) {
+
+            $pluginModel->rollback();
+
+            $this->error('操作失败！');
+
+        }
+
+        $this->success($successMessage);
     }
 
     /**
@@ -125,15 +145,16 @@ class PluginController extends AdminBaseController
         //$plugin['custom_config'] = $pluginObj->custom_config;
         $pluginConfigInDb = $plugin['config'];
         $plugin['config'] = include $pluginObj->getConfigFilePath();
+
         if ($pluginConfigInDb) {
             $pluginConfigInDb = json_decode($pluginConfigInDb, true);
             foreach ($plugin['config'] as $key => $value) {
                 if ($value['type'] != 'group') {
                     $plugin['config'][$key]['value'] = isset($pluginConfigInDb[$key]) ? $pluginConfigInDb[$key] : $value;
                 } else {
-                    foreach ($value['options'] as $gourp => $options) {
+                    foreach ($value['options'] as $group => $options) {
                         foreach ($options['options'] as $gkey => $value) {
-                            $plugin['config'][$key]['options'][$gourp]['options'][$gkey]['value'] = isset($pluginConfigInDb[$gkey]) ? $pluginConfigInDb[$gkey] : $value;
+                            $plugin['config'][$key]['options'][$group]['options'][$gkey]['value'] = isset($pluginConfigInDb[$gkey]) ? $pluginConfigInDb[$gkey] : $value;
                         }
                     }
                 }
@@ -165,13 +186,94 @@ class PluginController extends AdminBaseController
     public function settingPost()
     {
         if ($this->request->isPost()) {
-            $id     = $this->request->param('id', 0, 'intval');
+            $id = $this->request->param('id', 0, 'intval');
+
+            $pluginModel = new PluginModel();
+            $plugin      = $pluginModel->find($id)->toArray();
+
+            if (!$plugin) {
+                $this->error('插件未安装!');
+            }
+
+            $pluginClass = cmf_get_plugin_class($plugin['name']);
+            if (!class_exists($pluginClass)) {
+                $this->error('插件不存在!');
+            }
+
+            $pluginObj = new $pluginClass;
+            //$plugin['plugin_path']   = $pluginObj->plugin_path;
+            //$plugin['custom_config'] = $pluginObj->custom_config;
+            $pluginConfigInDb = $plugin['config'];
+            $plugin['config'] = include $pluginObj->getConfigFilePath();
+
+            $rules    = [];
+            $messages = [];
+
+            foreach ($plugin['config'] as $key => $value) {
+                if ($value['type'] != 'group') {
+                    if (isset($value['rule'])) {
+                        $rules[$key] = $this->_parseRules($value['rule']);
+                    }
+
+                    if (isset($value['message'])) {
+                        foreach ($value['message'] as $rule => $msg) {
+                            $messages[$key . '.' . $rule] = $msg;
+                        }
+                    }
+
+                } else {
+                    foreach ($value['options'] as $group => $options) {
+                        foreach ($options['options'] as $gkey => $value) {
+                            if (isset($value['rule'])) {
+                                $rules[$gkey] = $this->_parseRules($value['rule']);
+                            }
+
+                            if (isset($value['message'])) {
+                                foreach ($value['message'] as $rule => $msg) {
+                                    $messages[$gkey . '.' . $rule] = $msg;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             $config = $this->request->param('config/a');
+
+            $validate = new Validate($rules, $messages);
+            $result   = $validate->check($config);
+            if ($result !== true) {
+                $this->error($validate->getError());
+            }
 
             $pluginModel = new PluginModel();
             $pluginModel->save(['config' => json_encode($config)], ['id' => $id]);
-            $this->success('保存成功');
+            $this->success('保存成功', '');
         }
+    }
+
+    /**
+     * 解析插件配置验证规则
+     * @param $rules
+     * @return array
+     */
+    private function _parseRules($rules)
+    {
+        $newRules = [];
+
+        $simpleRules = [
+            'require', 'number',
+            'integer', 'float', 'boolean', 'email',
+            'array', 'accepted', 'date', 'alpha',
+            'alphaNum', 'alphaDash', 'activeUrl',
+            'url', 'ip'];
+        foreach ($rules as $key => $rule) {
+            if (in_array($key, $simpleRules) && $rule) {
+                array_push($newRules, $key);
+            }
+        }
+
+        return $newRules;
     }
 
     /**
@@ -187,7 +289,8 @@ class PluginController extends AdminBaseController
      *     'param'  => ''
      * )
      */
-    public function install()
+    public
+    function install()
     {
         $pluginName = $this->request->param('name', '', 'trim');
         $class      = cmf_get_plugin_class($pluginName);
@@ -256,7 +359,8 @@ class PluginController extends AdminBaseController
      *     'param'  => ''
      * )
      */
-    public function update()
+    public
+    function update()
     {
         $pluginName = $this->request->param('name', '', 'trim');
         $class      = cmf_get_plugin_class($pluginName);
@@ -333,7 +437,8 @@ class PluginController extends AdminBaseController
      *     'param'  => ''
      * )
      */
-    public function uninstall()
+    public
+    function uninstall()
     {
         $pluginModel = new PluginModel();
         $id          = $this->request->param('id', 0, 'intval');

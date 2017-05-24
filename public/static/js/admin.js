@@ -42,6 +42,7 @@
 
     // 所有加了dialog类名的a链接，自动弹出它的href
     if ($('a.js-dialog').length) {
+        Wind.css('artDialog');
         Wind.use('artDialog', 'iframeTools', function () {
             $('.js-dialog').on('click', function (e) {
                 e.preventDefault();
@@ -269,6 +270,7 @@
         try {
             art.dialog.close();
         } catch (err) {
+            Wind.css('artDialog');
             Wind.use('artDialog', 'iframeTools', function () {
                 art.dialog.close();
             });
@@ -278,6 +280,7 @@
 
     //所有的删除操作，删除数据后刷新页面
     if ($('a.js-ajax-delete').length) {
+        Wind.css('artDialog');
         Wind.use('artDialog', function () {
             $('.js-ajax-delete').on('click', function (e) {
                 e.preventDefault();
@@ -542,33 +545,45 @@ function redirect(url) {
  * @returns
  */
 function getCookie(name) {
-    var nameEQ = name + "=";
-    var ca     = document.cookie.split(';');
-    for (var i = 0; i < ca.length; i++) {
-        var c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1, c.length);
-        }
-        if (c.indexOf(nameEQ) == 0) {
-            return c.substring(nameEQ.length, c.length);
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
     }
-
-
-    return null;
+    return cookieValue;
 }
 
 /**
  * 设置cookie
  */
-function setCookie(name, value, days) {
-    var argc   = setCookie.arguments.length;
-    var argv   = setCookie.arguments;
-    var secure = (argc > 5) ? argv[5] : false;
-    var expire = new Date();
-    if (days == null || days == 0) days = 1;
-    expire.setTime(expire.getTime() + 3600000 * 24 * days);
-    document.cookie = name + "=" + escape(value) + ("; path=/") + ((secure == true) ? "; secure" : "") + ";expires=" + expire.toGMTString();
+function setCookie(name, value, options) {
+    options = options || {};
+    if (value === null) {
+        value = '';
+        options.expires = -1;
+    }
+    var expires = '';
+    if (options.expires && (typeof options.expires == 'number' || options.expires.toUTCString)) {
+        var date;
+        if (typeof options.expires == 'number') {
+            date = new Date();
+            date.setTime(date.getTime() + (options.expires * 24 * 60 * 60 * 1000));
+        } else {
+            date = options.expires;
+        }
+        expires = '; expires=' + date.toUTCString(); // use expires attribute, max-age is not supported by IE
+    }
+    var path = options.path ? '; path=' + options.path : '';
+    var domain = options.domain ? '; domain=' + options.domain : '';
+    var secure = options.secure ? '; secure' : '';
+    document.cookie = [name, '=', encodeURIComponent(value), expires, path, domain, secure].join('');
 }
 
 /**
@@ -578,6 +593,7 @@ function setCookie(name, value, days) {
  * @param options
  */
 function open_iframe_dialog(url, title, options) {
+    Wind.css('artDialog');
     var params = {
         title: title,
         lock: true,
@@ -600,7 +616,7 @@ function open_iframe_dialog(url, title, options) {
  * @param callback
  */
 function open_map_dialog(url, title, options, callback) {
-
+    Wind.css('artDialog');
     var params = {
         title: title,
         lock: true,
@@ -637,6 +653,7 @@ function open_map_dialog(url, title, options, callback) {
  * @param app  应用名，CMF的应用名
  */
 function open_upload_dialog(dialog_title, callback, extra_params, multi, filetype, app) {
+    Wind.css('artDialog');
     multi      = multi ? 1 : 0;
     filetype   = filetype ? filetype : 'image';
     app        = app ? app : GV.APP;
@@ -786,6 +803,7 @@ function image_preview_dialog(img) {
 }
 
 function artdialog_alert(msg) {
+    Wind.css('artDialog');
     Wind.use("artDialog", function () {
         art.dialog({
             id: new Date().getTime(),

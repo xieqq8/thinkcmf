@@ -10,14 +10,11 @@
     <meta name="description" content="This is page-header (.page-header &gt; h1)">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="__TMPL__/public/assets/simpleboot3/themes/flatadmin/bootstrap.min.css" rel="stylesheet">
+    <link href="__TMPL__/public/assets/themes/{:cmf_get_admin_style()}/bootstrap.min.css" rel="stylesheet">
     <link href="__TMPL__/public/assets/simpleboot3/css/simplebootadmin.css" rel="stylesheet">
-    <link href="__TMPL__/public/assets/simpleboot3/font-awesome/4.6.3/css/font-awesome.min.css?page=index"  rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="__TMPL__/public/assets/simpleboot3/themes/thinkcmfadmin/simplebootadminindex.min.css">
-    <link href="__STATIC__/js/artDialog/skins/default.css" rel="stylesheet" />
+    <link href="__STATIC__/font-awesome/css/font-awesome.min.css?page=index" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="__TMPL__/public/assets/themes/{:cmf_get_admin_style()}/simplebootadminindex.min.css">
     <style>
-        .navbar .nav_shortcuts .btn{margin-top: 5px;}
-        .macro-component-tabitem{width:101px;}
         /*-----------------导航hack--------------------*/
         .nav-list>li.open{position: relative;}
         .nav-list>li.open .back {display: none;}
@@ -135,9 +132,9 @@
 
 <body style="min-width:900px;">
 <div id="loading"><i class="loadingicon"></i><span>{:lang('LOADING')}</span></div>
-<div id="right_tools_wrapper">
+<div id="right-tools-wrapper">
     <!--<span id="right_tools_clearcache" title="清除缓存" onclick="javascript:openapp('{:url('admin/Setting/clearcache')}','right_tool_clearcache','清除缓存');"><i class="fa fa-trash-o right_tool_icon"></i></span>-->
-    <span id="refresh_wrapper" title="{:lang('REFRESH_CURRENT_PAGE')}" ><i class="fa fa-refresh right_tool_icon"></i></span>
+    <span id="refresh-wrapper" title="{:lang('REFRESH_CURRENT_PAGE')}" ><i class="fa fa-refresh right_tool_icon"></i></span>
 </div>
 <div class="navbar navbar-default">
     <div class="container-fluid">
@@ -151,60 +148,17 @@
         </div>
 
         <div class="navbar-collapse collapse" id="navbar-main">
-            <div class="pull-left nav_shortcuts" >
-                <a class="btn btn-sm btn-warning" href="__ROOT__/" title="{:lang('WEBSITE_HOME_PAGE')}" target="_blank">
-                    <i class="fa fa-home"></i>
-                </a>
-                <!--
-                <if condition="cmf_auth_check(cmf_get_current_admin_id(),'portal/AdminCategory/index')">
-                    <a class="btn btn-sm btn-success" href="javascript:openapp('{:url('portal/AdminCategory/index')}','index_termlist','文章分类管理');" title="文章分类管理">
-                        <i class="fa fa-th"></i>
-                    </a>
-                </if>
-
-                <if condition="cmf_auth_check(cmf_get_current_admin_id(),'portal/AdminArticle/index')">
-                    <a class="btn btn-sm btn-info" href="javascript:openapp('{:url('portal/AdminArticle/index')}','index_postlist','文章管理');" title="文章管理">
-                        <i class="fa fa-pencil"></i>
-                    </a>
-                </if>
-                -->
-
-                <if condition="cmf_auth_check(cmf_get_current_admin_id(),'user/AdminAsset/index')">
-                    <a class="btn btn-sm btn-info" href="javascript:openapp('{:url('user/AdminAsset/index')}','userAdminAssetindex','资源管理');" title="资源管理">
-                        <i class="fa fa-file"></i>
-                    </a>
-                </if>
-
-                <if condition="cmf_auth_check(cmf_get_current_admin_id(),'admin/Setting/clearcache')">
-                    <a class="btn btn-sm btn-danger" href="javascript:openapp('{:url('admin/Setting/clearcache')}','index_clearcache','{:lang('ADMIN_SETTING_CLEARCACHE')}');" title="{:lang('ADMIN_SETTING_CLEARCACHE')}">
-                        <i class="fa fa-trash-o"></i>
-                    </a>
-                </if>
-
-                <if condition="cmf_auth_check(cmf_get_current_admin_id(),'admin/Recycle/index')">
-                    <a class="btn btn-sm btn-danger" href="javascript:openapp('{:url('admin/Recycle/index')}','index_recycle','回收站');" title="回收站">
-                        <i class="fa fa-recycle"></i>
-                    </a>
-                </if>
-
-                <if condition="APP_DEBUG">
-                    <a class="btn btn-sm btn-default" href="javascript:openapp('{:url('admin/Menu/index')}','index_menu','{:lang('ADMIN_MENU_INDEX')}');" title="{:lang('ADMIN_MENU_INDEX')}">
-                        <i class="fa fa-list"></i>
-                    </a>
-                </if>
-            </div>
-
-            <div class="pull-left" style="width: 700px;">
-                <!-- <a id="task-pre" class="task-changebt">←</a> -->
+            <div class="pull-left" style="position: relative;">
+               <a id="task-pre" class="task-changebt"><i class="fa fa-chevron-left"></i></a>
                 <div id="task-content">
-                    <ul class="nav navbar-nav macro-component-tab" id="task-content-inner">
-                        <li class="macro-component-tabitem noclose" app-id="0" app-url="{:url('main/index')}" app-name="首页">
-                            <a class="macro-tabs-item-text">{:lang('HOME')}</a>
+                    <ul class="nav navbar-nav cmf-component-tab" id="task-content-inner">
+                        <li class="cmf-component-tabitem noclose" app-id="0" app-url="{:url('main/index')}" app-name="首页">
+                            <a class="cmf-tabs-item-text">{:lang('HOME')}</a>
                         </li>
                     </ul>
                     <div style="clear:both;"></div>
                 </div>
-                <!-- <a id="task-next" class="task-changebt">→</a> -->
+               <a id="task-next" class="task-changebt"><i class="fa fa-chevron-right"></i></a>
             </div>
 
             <ul class="nav navbar-nav navbar-right simplewind-nav">
@@ -241,9 +195,50 @@
 <div class="main-container container-fluid">
 
     <div class="sidebar" id="sidebar">
-        <!-- <div class="sidebar-shortcuts" id="sidebar-shortcuts">
-        </div> -->
-        <div id="nav_wraper">
+        <div class="sidebar-shortcuts" id="sidebar-shortcuts">
+            <a class="btn btn-sm btn-warning" href="__ROOT__/" title="{:lang('WEBSITE_HOME_PAGE')}" target="_blank">
+                <i class="fa fa-home"></i>
+            </a>
+            <!--
+            <if condition="cmf_auth_check(cmf_get_current_admin_id(),'portal/AdminCategory/index')">
+                <a class="btn btn-sm btn-success" href="javascript:openapp('{:url('portal/AdminCategory/index')}','index_termlist','文章分类管理');" title="文章分类管理">
+                    <i class="fa fa-th"></i>
+                </a>
+            </if>
+
+            <if condition="cmf_auth_check(cmf_get_current_admin_id(),'portal/AdminArticle/index')">
+                <a class="btn btn-sm btn-info" href="javascript:openapp('{:url('portal/AdminArticle/index')}','index_postlist','文章管理');" title="文章管理">
+                    <i class="fa fa-pencil"></i>
+                </a>
+            </if>
+            -->
+
+            <if condition="cmf_auth_check(cmf_get_current_admin_id(),'user/AdminAsset/index')">
+                <a class="btn btn-sm btn-info" href="javascript:openapp('{:url('user/AdminAsset/index')}','userAdminAssetindex','资源管理',true);" title="资源管理">
+                    <i class="fa fa-file"></i>
+                </a>
+            </if>
+
+            <if condition="cmf_auth_check(cmf_get_current_admin_id(),'admin/Setting/clearcache')">
+                <a class="btn btn-sm btn-danger" href="javascript:openapp('{:url('admin/Setting/clearcache')}','index_clearcache','{:lang('ADMIN_SETTING_CLEARCACHE')}',true);" title="{:lang('ADMIN_SETTING_CLEARCACHE')}">
+                    <i class="fa fa-trash-o"></i>
+                </a>
+            </if>
+
+            <if condition="cmf_auth_check(cmf_get_current_admin_id(),'admin/RecycleBin/index')">
+                <a class="btn btn-sm btn-danger" href="javascript:openapp('{:url('admin/RecycleBin/index')}','index_recycle','回收站',true);" title="回收站">
+                    <i class="fa fa-recycle"></i>
+                </a>
+            </if>
+
+            <if condition="APP_DEBUG">
+                <a class="btn btn-sm btn-default" href="javascript:openapp('{:url('admin/Menu/index')}','index_menu','{:lang('ADMIN_MENU_INDEX')}',true);" title="{:lang('ADMIN_MENU_INDEX')}">
+                    <i class="fa fa-list"></i>
+                </a>
+            </if>
+
+        </div>
+        <div id="nav-wrapper">
             <ul class="nav nav-list">
                 {:getsubmenu($submenus)}
             </ul>
@@ -258,9 +253,9 @@
     </div>
 </div>
 
-<script src="__TMPL__/public/assets/simpleboot3/js/jquery-1.10.2.min.js"></script>
+<script src="__TMPL__/public/assets/js/jquery-1.10.2.min.js"></script>
 <script src="__STATIC__/js/wind.js"></script>
-<script src="__TMPL__/public/assets/simpleboot3/js/bootstrap.min.js"></script>
+<script src="__TMPL__/public/assets/js/bootstrap.min.js"></script>
 <script src="__STATIC__/js/admin.js"></script>
 <script src="__TMPL__/public/assets/simpleboot3/js/adminindex.js"></script>
 <script>

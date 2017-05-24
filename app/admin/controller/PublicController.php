@@ -22,9 +22,14 @@ class PublicController extends AdminBaseController
      */
     public function login()
     {
+        $loginAllowed = session("__LOGIN_BY_CMF_ADMIN_PW__");
+        if (empty($loginAllowed)) {
+            $this->error('非法登录!', cmf_get_root() . '/');
+        }
+
         $admin_id = session('ADMIN_ID');
         if (!empty($admin_id)) {//已经登录
-            redirect(url("admin/index/index"));
+            redirect(url("admin/Index/index"));
         } else {
             $site_admin_url_password = config("cmf_SITE_ADMIN_URL_PASSWORD");
             $upw                     = session("__CMF_UPW__");
@@ -32,6 +37,10 @@ class PublicController extends AdminBaseController
                 redirect(ROOT_PATH . "/");
             } else {
                 session("__SP_ADMIN_LOGIN_PAGE_SHOWED_SUCCESS__", true);
+                $result = hook_one('admin_login');
+                if (!empty($result)) {
+                    return $result;
+                }
                 return $this->fetch(":login");
             }
         }
@@ -42,10 +51,10 @@ class PublicController extends AdminBaseController
      */
     public function doLogin()
     {
-//        $login_page_showed_success = session("__CMF_ADMIN_LOGIN_PAGE_SHOWED_SUCCESS__");
-//        if (!$login_page_showed_success) {
-//            $this->error('login error!');
-//        }
+        $loginAllowed = session("__LOGIN_BY_CMF_ADMIN_PW__");
+        if (empty($loginAllowed)) {
+            $this->error('非法登录!', cmf_get_root() . '/');
+        }
 
         $captcha = $this->request->param('captcha');
         if (empty($captcha)) {
@@ -89,7 +98,8 @@ class PublicController extends AdminBaseController
                 $result['last_login_time'] = time();
                 Db::name('user')->update($result);
                 cookie("admin_username", $name, 3600 * 24 * 30);
-                $this->success(lang('LOGIN_SUCCESS'), url("Index/index"));
+                session("__LOGIN_BY_CMF_ADMIN_PW__", null);
+                $this->success(lang('LOGIN_SUCCESS'), url("admin/Index/index"));
             } else {
                 $this->error(lang('PASSWORD_NOT_RIGHT'));
             }
@@ -104,6 +114,6 @@ class PublicController extends AdminBaseController
     public function logout()
     {
         session('ADMIN_ID', null);
-        $this->redirect('admin/public/login');
+        $this->redirect(cmf_get_root() . '/');
     }
 }

@@ -1,5 +1,7 @@
-ThinkCMF 5.0 RC3
+ThinkCMF 5.0 RC4 520版
 ===============
+### 赞助者招募
+[查看招募令http://www.thinkcmf.com/supportcmf/goldsponsor.html](http://www.thinkcmf.com/supportcmf/goldsponsor.html)
 
 ### 环境推荐
 > php5.5+
@@ -20,52 +22,15 @@ ThinkCMF 5.0 RC3
 http://demo5.thinkcmf.com/admin/   
 用户名/密码:demo/thinkcmf
 
-### 自动安装(测试版)
+### 自动安装
 > 之前安装过 cmf5的同学,请手动创建`data/install.lock`文件
 
-代码已经加入自动安装程序,如果你在安装中有任何问题请提交 issue, 无法安装成功时请尝试下面
-的`手动安装步骤`.
+代码已经加入自动安装程序,如果你在安装中有任何问题请提交 issue!
+
+1. public目录做为网站根目录,入口文件在 public/index.php
+2. 配置好网站，请访问http://你的域名
 
 enjoy your cmf~!
-
-### 手动安装步骤
-
-1.创建 thinkcmf5数据库(默认编码utf8mb4),并导入 update/thinkcmf5.sql
-
-2.在 data目录下创建 conf/database.php 文件,内容如下:
-
-```php
-<?php
-
-return [
-    // 数据库类型
-    'type'           => 'mysql',
-    // 服务器地址
-    'hostname'       => 'localhost',
-    // 数据库名
-    'database'       => '你的数据库名',
-    // 用户名
-    'username'       => '你的数据库用户名',
-    // 密码
-    'password'       => '你的数据库密码',
-    // 端口
-    'hostport'       => '3306',
-    // 数据库编码默认采用utf8
-    'charset'        => 'utf8mb4',
-    // 数据库表前缀
-    'prefix'         => 'cmf_',
-    "authcode" => 'CviMdXkZ3vUxyJCwNt',
-];
-```
-更改为你的数据库信息
-
-3.创建`data/install.lock`文件
-
-4.把 public目录做为网站根目录,入口文件在 public/index.php
-
-5.后台
-你的域名/admin  
-用户名/密码:admin/111111
 
 ### 系统更新
 如果您是已经安装过 cmf5的用户,请查看 update 目录下的 sql 升级文件,根据自己的下载的程序版本进行更新
@@ -123,7 +88,11 @@ thinkcmf  根目录
 http://www.kancloud.cn/thinkcmf/doc
 
 ### QQ群:
-ThinkCMF 高级交流群:100828313 (付费)  
+`ThinkCMF 官方交流群`:316669417  
+   
+`ThinkCMF 高级交流群`:100828313 (付费)  
+高级群专属权益:  
+第一波:两个后台风格(ThinkCMF官网风格后台主题,蓝色风格后台主题)
 
 ### 话题专区
 http://www.thinkcmf.com/topic/index/index/cat/11.html
@@ -132,6 +101,45 @@ http://www.thinkcmf.com/topic/index/index/cat/11.html
 https://github.com/thinkcmf/thinkcmf/issues
 
 ### 更新日志
+#### 5.0.170520
+[核心]
+* 完善插件后台管理
+* 后台登录插件化
+* 后台首页插件化
+* 文件存储插件化
+* 增加 URL 美化功能
+* 增加后台加密码功能
+* 增加用户修改头像
+* 增加插件设置表单验证
+* 增加前台后台通用语言包
+* 增加编辑器里上传文件链接替换
+* 增加应用 command.php 配置文件
+* 增加后台管理员添加编辑用户名，邮箱惟一性验证
+* 优化安装程序
+* 优化上传文件
+* 优化后台首页
+* 优化回收站
+* 优化插件启用禁用
+* 优化小屏下后台首页不兼容问题
+* 优化后台图片查看
+* 修复后台菜单编辑不生效
+* 修复幻灯片添加不显示问题
+* 修复导航数据源数据返回为空时报错
+* 修复 pathinfo 模式下后台本站用户默认头像不显示问题
+* 修复后台 cdn 不能设置
+* 合并asset应用到 user
+
+[门户应用]
+* 增加文章收藏功能
+* 增加文章点赞限制,一个用户只能点赞一次
+* 增加文章分类缩略图
+* 优化文章分类管理删除
+* 优化文章页和页面页内容图片样式问题
+* 修复文章添加编辑默认图片错误
+* 修复分类下没有文章时报错
+* 修复页面模板设置无效
+* 修复页面删除后仍可以访问
+
 #### 5.0.170505
 [核心]
 * 完善用户注册流程

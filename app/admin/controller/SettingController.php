@@ -8,6 +8,7 @@
 // +----------------------------------------------------------------------
 namespace app\admin\controller;
 
+use app\admin\model\RouteModel;
 use cmf\controller\AdminBaseController;
 
 use think\Db;
@@ -43,33 +44,19 @@ class SettingController extends AdminBaseController
      */
     public function site()
     {
-        //$option=$this->options_model->where("option_name='site_info'")->find();
-//		$cmfSettings=$this->options_model->where("option_name='cmf_settings'")->getField("option_value");
-//		$tpls=sp_scan_dir(C("SP_TMPL_PATH")."*",GLOB_ONLYDIR);
-//		$noneed=array(".","..",".svn");
-//		$tpls=array_diff($tpls, $noneed);
-//		$this->assign("templates",$tpls);
-//
-//		$adminstyles=sp_scan_dir("public/simpleboot/themes/*",GLOB_ONLYDIR);
-//		$adminstyles=array_diff($adminstyles, $noneed);
-//		$this->assign("adminstyles",$adminstyles);
-//		if($option){
-//			$this->assign(json_decode($option['option_value'],true));
-//			$this->assign("option_id",$option['option_id']);
-//		}
-//
-//		$cdnSettings=sp_get_option('cdn_settings');
-
+        $noNeedDirs     = [".", "..", ".svn", 'fonts'];
+        $adminThemesDir = config('cmf_admin_theme_path') . config('cmf_admin_default_theme') . '/public/assets/themes/';
+        $adminStyles    = cmf_scan_dir($adminThemesDir . '*', GLOB_ONLYDIR);
+        $adminStyles    = array_diff($adminStyles, $noNeedDirs);
+        $cdnSettings    = cmf_get_option('cdn_settings');
+        $cmfSettings    = "";
+        $adminSettings  = cmf_get_option('admin_settings');
 
         $this->assign(cmf_get_option('site_info'));
-
-        $cdnSettings = [];
-        $cmfSettings = "";
-
+        $this->assign("admin_styles", $adminStyles);
         $this->assign("templates", []);
-        $this->assign("adminstyles", []);
         $this->assign("cdn_settings", $cdnSettings);
-
+        $this->assign("admin_settings", $adminSettings);
         $this->assign("cmf_settings", json_decode($cmfSettings, true));
 
         return $this->fetch();
@@ -91,21 +78,37 @@ class SettingController extends AdminBaseController
     public function sitePost()
     {
         if ($this->request->isPost()) {
-            $options = $this->request->param('options/a');
+            $result = $this->validate($this->request->param(), 'SettingSite');
+            if ($result !== true) {
+                $this->error($result);
+            }
 
+            $options = $this->request->param('options/a');
             cmf_set_option('site_info', $options);
 
             $cmfSettings = $this->request->param('cmf_settings/a');
 
             $bannedUsernames                 = preg_replace("/[^0-9A-Za-z_\\x{4e00}-\\x{9fa5}-]/u", ",", $cmfSettings['banned_usernames']);
             $cmfSettings['banned_usernames'] = $bannedUsernames;
-
             cmf_set_option('cmf_settings', $cmfSettings);
 
             $cdnSettings = $this->request->param('cdn_settings/a');
             cmf_set_option('cdn_settings', $cdnSettings);
 
-            $this->success("保存成功！",'');
+            $adminSettings = $this->request->param('admin_settings/a');
+
+            $routeModel = new RouteModel();
+            if (!empty($adminSettings['admin_password'])) {
+                $routeModel->setRoute($adminSettings['admin_password'], 'admin/Index/index', [], 2, 5000);
+            } else {
+                $routeModel->deleteRoute('admin/Index/index', []);
+            }
+
+            $routeModel->getRoutes(true);
+
+            cmf_set_option('admin_settings', $adminSettings);
+
+            $this->success("保存成功！", '');
 
         }
     }

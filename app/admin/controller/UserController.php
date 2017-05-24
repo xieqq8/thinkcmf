@@ -116,7 +116,8 @@ class UserController extends AdminBaseController
                 if ($result !== true) {
                     $this->error($result);
                 } else {
-                    $result = DB::name('user')->insert($_POST);
+                    $_POST['user_pass'] = cmf_password($_POST['user_pass']);
+                    $result             = DB::name('user')->insertGetId($_POST);
                     if ($result !== false) {
                         //$role_user_model=M("RoleUser");
                         foreach ($role_ids as $role_id) {
@@ -218,7 +219,7 @@ class UserController extends AdminBaseController
     /**
      * 管理员个人信息修改
      * @adminMenu(
-     *     'name'   => '管理员个人信息修改',
+     *     'name'   => '个人信息',
      *     'parent' => 'index',
      *     'display'=> false,
      *     'hasView'=> true,
@@ -230,8 +231,7 @@ class UserController extends AdminBaseController
      */
     public function userInfo()
     {
-        $id   = cmf_get_current_admin_id();//TODO
-        $id   = isset($id) ? $id : 1;
+        $id   = cmf_get_current_admin_id();
         $user = Db::name('user')->where(["id" => $id])->find();
         $this->assign($user);
         return $this->fetch();
@@ -256,7 +256,7 @@ class UserController extends AdminBaseController
 
             $data             = $this->request->post();
             $data['birthday'] = strtotime($data['birthday']);
-            $data['id']       = 1;//TODO cmf_get_current_admin_id();
+            $data['id']       = cmf_get_current_admin_id();
             $create_result    = Db::name('user')->update($data);;
             if ($create_result !== false) {
                 $this->success("保存成功！");
