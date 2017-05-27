@@ -6,7 +6,7 @@
         var selectedObjectsId = $realInput.val();
         var dataSource        = $obj.data('source');
         var title             = $obj.data('title');
-        parent.open_iframe_layer("{:url('theme/dataSource')}?ids=" + selectedObjectsId + '&data_source=' + dataSource, title, {
+        parent.openIframeLayer("{:url('theme/dataSource')}?ids=" + selectedObjectsId + '&data_source=' + dataSource, title, {
             area: ['700px', '90%'],
             btn: ['确定', '取消'],
             yes: function (index, layero) {
@@ -30,7 +30,7 @@
         var widget = $obj.data('widget');
         widget     = widget ? '&widget=' + widget : '';
 
-        parent.open_iframe_layer(
+        parent.openIframeLayer(
             "{:url('theme/fileArrayData')}?tab={$tab}&file_id={$file_id}&" + 'var=' + mVar + widget,
             title,
             {
@@ -38,14 +38,12 @@
                 btn: ['确定', '取消'],
                 yes: function (index, layero) {
                     var iframeWin       = parent.window[layero.find('iframe')[0]['name']];
-                    var selectedObjects = iframeWin.confirm();
-                    if (selectedObjects.selectedObjectsId.length == 0) {
-                        layer.msg('您没有选择任何数据!');
-                        return;
+                    var result=iframeWin.confirm();
+
+                    if(result){
+                        parent.layer.close(index); //如果设定了yes回调，需进行手工关闭
                     }
-                    $realInput.val(selectedObjects.selectedObjectsId.join(','));
-                    $obj.val(selectedObjects.selectedObjectsName.join(','));
-                    parent.layer.close(index); //如果设定了yes回调，需进行手工关闭
+
                 }
             }
         );
@@ -57,7 +55,7 @@
         var $realInput = $obj.next();
         var location   = $realInput.val();
 
-        parent.open_iframe_layer(
+        parent.openIframeLayer(
             "{:url('dialog/map')}?location=" + location,
             title,
             {
