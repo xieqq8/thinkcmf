@@ -4,6 +4,8 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
 // | Author: 小夏 < 449134904@qq.com>
 // +----------------------------------------------------------------------
 namespace app\admin\controller;
@@ -105,7 +107,7 @@ class MenuController extends AdminBaseController
     public function add()
     {
         $tree     = new Tree();
-        $parentId = $this->request->request("parent_id", 0, 'intval');
+        $parentId = $this->request->param("parent_id", 0, 'intval');
         $result   = Db::name('AdminMenu')->order(["list_order" => "ASC"])->select();
         $array    = [];
         foreach ($result as $r) {

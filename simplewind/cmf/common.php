@@ -4,9 +4,10 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +---------------------------------------------------------------------
 // | Author: Dean <zxxjjforever@163.com>
 // +----------------------------------------------------------------------
-
 use think\Config;
 use think\Db;
 use think\Url;
@@ -19,7 +20,7 @@ use cmf\lib\Storage;
 // 应用公共文件
 
 //设置插件入口路由
-Route::get('plugin/[:_plugin]/[:_controller]/[:_action]', "\\cmf\\controller\\PluginController@index");
+Route::any('plugin/[:_plugin]/[:_controller]/[:_action]', "\\cmf\\controller\\PluginController@index");
 Route::get('captcha/new', "\\cmf\\controller\\CaptchaController@index");
 
 /**
@@ -100,28 +101,37 @@ function cmf_get_root()
 }
 
 /**
- * @TODO 增加主题切换时获取当然主题
  * 获取当前主题名
  * @return string
  */
 function cmf_get_current_theme()
 {
-//    $tmpl_path = C("SP_TMPL_PATH");
-//    $theme     = C('SP_DEFAULT_THEME');
-//    if (C('TMPL_DETECT_THEME')) {
-//        $t = C('VAR_TEMPLATE');
-//        if (isset($_GET[$t])) {
-//            $theme = $_GET[$t];
-//        } elseif (cookie('think_template')) {
-//            $theme = cookie('think_template');
-//        }
-//        if (!file_exists($tmpl_path . "/" . $theme)) {
-//            $theme = C('SP_DEFAULT_THEME');
-//        }
-//        cookie('think_template', $theme, 864000);
-//    }
+    static $_currentTheme;
 
+    if (!empty($_currentTheme)) {
+        return $_currentTheme;
+    }
+
+    $t     = 't';
     $theme = config('cmf_default_theme');
+
+    $cmfDetectTheme = config('cmf_detect_theme');
+    if ($cmfDetectTheme) {
+        if (isset($_GET[$t])) {
+            $theme = $_GET[$t];
+            cookie('cmf_template', $theme, 864000);
+        } elseif (cookie('cmf_template')) {
+            $theme = cookie('cmf_template');
+        }
+    }
+
+    $hookTheme = hook_one('switch_theme');
+
+    if ($hookTheme) {
+        $theme = $hookTheme;
+    }
+
+    $_currentTheme = $theme;
 
     return $theme;
 }
@@ -1549,7 +1559,10 @@ function cmf_replace_content_file_url($content, $isForDbSave = false)
                 }
 
             } else {
-                $link->attr("href", cmf_get_file_download_url($href));
+                if (!(preg_match("/^\//", $href) || preg_match("/^http/", $href))) {
+                    $link->attr("href", cmf_get_file_download_url($href));
+                }
+
             }
 
         }
@@ -1572,4 +1585,27 @@ function cmf_get_admin_style()
 {
     $adminSettings = cmf_get_option('admin_settings');
     return empty($adminSettings['admin_style']) ? 'flatadmin' : $adminSettings['admin_style'];
+}
+
+/**
+ * curl get 请求
+ * @param $url
+ * @return mixed
+ */
+function cmf_curl_get($url)
+{
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_FAILONERROR, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    $SSL = substr($url, 0, 8) == "https://" ? true : false;
+    if ($SSL) {
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // 信任任何证书
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // 检查证书中是否设置域名
+    }
+    $content = curl_exec($ch);
+    return $content;
 }

@@ -4,6 +4,8 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
 // | Author: 老猫 <zxxjjforever@163.com>
 // +----------------------------------------------------------------------
 namespace app\admin\controller;
@@ -210,7 +212,7 @@ class ThemeController extends AdminBaseController
     public function files()
     {
         $theme = $this->request->param('theme');
-        $files = Db::name('theme_file')->where(['theme' => $theme])->order('list_order DESC')->select()->toArray();
+        $files = Db::name('theme_file')->where(['theme' => $theme])->order('list_order ASC')->select()->toArray();
         $this->assign('files', $files);
         return $this->fetch();
     }
@@ -584,7 +586,21 @@ class ThemeController extends AdminBaseController
             $file = Db::name('theme_file')->field('theme,more')->where(['id' => $id])->find();
             $more = json_decode($file['more'], true);
             if (isset($post['vars'])) {
+                $messages = [];
+                $rules    = [];
+
                 foreach ($more['vars'] as $mVarName => $mVar) {
+
+                    if (!empty($mVar['rule'])) {
+                        $rules[$mVarName] = $this->_parseRules($mVar['rule']);
+                    }
+
+                    if (!empty($mVar['message'])) {
+                        foreach ($mVar['message'] as $rule => $msg) {
+                            $messages[$mVarName . '.' . $rule] = $msg;
+                        }
+                    }
+
                     if (isset($post['vars'][$mVarName])) {
                         $more['vars'][$mVarName]['value'] = $post['vars'][$mVarName];
                     }
@@ -592,6 +608,12 @@ class ThemeController extends AdminBaseController
                     if (isset($post['vars'][$mVarName . '_text_'])) {
                         $more['vars'][$mVarName]['valueText'] = $post['vars'][$mVarName . '_text_'];
                     }
+                }
+
+                $validate = new Validate($rules, $messages);
+                $result   = $validate->check($post['vars']);
+                if (!$result) {
+                    $this->error($validate->getError());
                 }
             }
 
@@ -608,20 +630,16 @@ class ThemeController extends AdminBaseController
                         $widget['title'] = $post['widget'][$mWidgetName]['title'];
                     }
 
-                    $rules    = [
-                        'name' => ['require', 'max' => 25],
-                        'age'  => ['number', 'between' => '1,120'],
-                    ];
                     $messages = [];
                     $rules    = [];
 
                     foreach ($widget['vars'] as $mVarName => $mVar) {
 
-                        if (isset($mVar['rule'])) {
+                        if (!empty($mVar['rule'])) {
                             $rules[$mVarName] = $this->_parseRules($mVar['rule']);
                         }
 
-                        if (isset($mVar['message'])) {
+                        if (!empty($mVar['message'])) {
                             foreach ($mVar['message'] as $rule => $msg) {
                                 $messages[$mVarName . '.' . $rule] = $msg;
                             }
@@ -637,8 +655,9 @@ class ThemeController extends AdminBaseController
                     }
 
                     if ($widget['display']) {
-                        $validate = new Validate($rules, $messages);
-                        $result   = $validate->check($post['widget_vars'][$mWidgetName]);
+                        $validate   = new Validate($rules, $messages);
+                        $widgetVars = empty($post['widget_vars'][$mWidgetName]) ? [] : $post['widget_vars'][$mWidgetName];
+                        $result     = $validate->check($widgetVars);
                         if (!$result) {
                             $this->error($widget['title'] . ':' . $validate->getError());
                         }

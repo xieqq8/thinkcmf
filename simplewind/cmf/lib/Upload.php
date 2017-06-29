@@ -8,7 +8,6 @@
 // +---------------------------------------------------------------------
 // | Author: Dean <zxxjjforever@163.com>
 // +---------------------------------------------------------------------
-
 namespace cmf\lib;
 
 use think\File;
@@ -271,7 +270,7 @@ class Upload
                 $arrInfo["file_sha1"]   = sha1_file($strSaveFilePath);
                 $arrInfo["file_key"]    = $arrInfo["file_md5"] . md5($arrInfo["file_sha1"]);
                 $arrInfo["filename"]    = $fileImage->getInfo("name");
-                $arrInfo["file_path"]   = $strWebPath . $fileImage->getSaveName();
+                $arrInfo["file_path"]   = $strWebPath . $fileSaveName;
                 $arrInfo["suffix"]      = $fileImage->getExtension();
             }
 
@@ -284,7 +283,12 @@ class Upload
             $arrAsset = $objAsset->toArray();
             //$arrInfo["url"] = $this->request->domain() . $arrAsset["file_path"];
             $arrInfo["file_path"] = $arrAsset["file_path"];
-            @unlink($strSaveFilePath); // 删除已经上传的文件
+            if (file_exists('./upload/' . $arrInfo["file_path"])) {
+                @unlink($strSaveFilePath); // 删除已经上传的文件
+            } else {
+                rename($strSaveFilePath, './upload/' . $arrInfo["file_path"]);
+            }
+
         } else {
             $assetModel->data($arrInfo)->allowField(true)->save();
         }
@@ -303,7 +307,7 @@ class Upload
         }
 
         if ($storage['type'] != 'Local') { //  增加存储驱动
-            $storage = new Storage($storage['type'], $storage[$storage['type']]);
+            $storage = new Storage($storage['type'], $storage['storages'][$storage['type']]);
             $result  = $storage->upload($arrInfo["file_path"], './upload/' . $arrInfo["file_path"], $fileType);
 
             if (!empty($result)) {

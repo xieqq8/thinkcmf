@@ -63,7 +63,7 @@
     var ajaxForm_list = $('form.js-ajax-form');
     if (ajaxForm_list.length) {
         Wind.css('artDialog');
-        Wind.use('ajaxForm', 'artDialog', 'noty', 'validate', function () {
+        Wind.use('ajaxForm', 'artDialog', 'noty3', 'validate', function () {
             var $btn;
             $('button.js-ajax-submit').on('click', function (e) {
                 var btn = $(this), form = btn.parents('form.js-ajax-form');
@@ -201,18 +201,28 @@
                                 //按钮文案、状态修改
                                 $btn.removeClass('disabled').prop('disabled', false).text(text.replace('中...', '')).parent().find('span').remove();
                                 if (data.code == 1) {
-                                    noty({
+                                    if ($btn.data('success')) {
+                                        var successCallback = $btn.data('success');
+                                        window[successCallback](data, statusText, xhr, $form);
+                                        return;
+                                    }
+                                    new Noty({
                                         text: data.msg,
                                         type: 'success',
                                         layout: 'topCenter',
-                                        callback: {
-                                            onClose: function () {
+                                        animation: {
+                                            open: 'animated bounceInDown', // Animate.css class names
+                                            close: 'animated bounceOutUp', // Animate.css class names
+                                        },
+                                        callbacks: {
+                                            afterClose: function () {
                                                 if ($btn.data('refresh') == undefined || $btn.data('refresh')) {
                                                     _refresh();
                                                 }
                                             }
                                         }
-                                    });
+                                    }).show();
+                                    $(window).focus();
                                 } else if (data.code == 0) {
                                     var $verify_img = $form.find(".verify_img");
                                     if ($verify_img.length) {
@@ -224,16 +234,22 @@
 
                                     //$('<span class="tips_error">' + data.msg + '</span>').appendTo($btn.parent()).fadeIn('fast');
                                     $btn.removeProp('disabled').removeClass('disabled');
-                                    noty({
+
+                                    new Noty({
                                         text: data.msg,
                                         type: 'error',
                                         layout: 'topCenter',
-                                        callback: {
-                                            onClose: function () {
+                                        animation: {
+                                            open: 'animated bounceInDown', // Animate.css class names
+                                            close: 'animated bounceOutUp', // Animate.css class names
+                                        },
+                                        callbacks: {
+                                            afterClose: function () {
                                                 _refresh();
                                             }
                                         }
-                                    });
+                                    }).show();
+                                    $(window).focus();
                                 }
 
 
@@ -523,6 +539,69 @@
         });
     }
 
+    //地址联动
+    var $js_address_select = $('.js-address-select');
+    if ($js_address_select.length > 0) {
+        $('.js-address-province-select,.js-address-city-select').change(function () {
+            var $this                   = $(this);
+            var id                      = $this.val();
+            var $child_area_select;
+            var $this_js_address_select = $this.parents('.js-address-select');
+            if ($this.is('.js-address-province-select')) {
+                $child_area_select = $this_js_address_select.find('.js-address-city-select');
+                $this_js_address_select.find('.js-address-district-select').hide();
+            } else {
+                $child_area_select = $this_js_address_select.find('.js-address-district-select');
+            }
+
+            var empty_option = '<option class="js-address-empty-option" value="">' + $child_area_select.find('.js-address-empty-option').text() + '</option>';
+            $child_area_select.html(empty_option);
+
+            var child_area_html = $this.data('childarea' + id);
+            if (child_area_html) {
+                $child_area_select.show();
+                $child_area_select.html(child_area_html);
+                return;
+            }
+
+            $.ajax({
+                url: $this_js_address_select.data('url'),
+                type: 'POST',
+                dataType: 'JSON',
+                data: {id: id},
+                success: function (data) {
+                    if (data.code == 1) {
+                        if (data.data.areas.length > 0) {
+                            var html = [empty_option];
+
+                            $.each(data.data.areas, function (i, area) {
+                                var area_html = '<option value="[id]">[name]</option>';
+                                area_html     = area_html.replace('[name]', area.name);
+                                area_html     = area_html.replace('[id]', area.id);
+                                html.push(area_html);
+                            });
+                            html = html.join('', html);
+                            $this.data('childarea' + id, html);
+                            $child_area_select.html(html);
+                            $child_area_select.show();
+                        } else {
+                            $child_area_select.hide();
+
+                        }
+                    }
+                },
+                error: function () {
+
+                },
+                complete: function () {
+
+                }
+            });
+        });
+
+    }
+    //地址联动end
+
 })();
 
 //重新刷新页面，使用location.reload()有可能导致重新提交
@@ -566,7 +645,7 @@ function getCookie(name) {
 function setCookie(name, value, options) {
     options = options || {};
     if (value === null) {
-        value = '';
+        value           = '';
         options.expires = -1;
     }
     var expires = '';
@@ -580,9 +659,9 @@ function setCookie(name, value, options) {
         }
         expires = '; expires=' + date.toUTCString(); // use expires attribute, max-age is not supported by IE
     }
-    var path = options.path ? '; path=' + options.path : '';
-    var domain = options.domain ? '; domain=' + options.domain : '';
-    var secure = options.secure ? '; secure' : '';
+    var path        = options.path ? '; path=' + options.path : '';
+    var domain      = options.domain ? '; domain=' + options.domain : '';
+    var secure      = options.secure ? '; secure' : '';
     document.cookie = [name, '=', encodeURIComponent(value), expires, path, domain, secure].join('');
 }
 
@@ -793,7 +872,7 @@ function imagePreviewDialog(img) {
                     }
                 ]
             } //格式见API文档手册页
-            ,anim: 5, //0-6的选择，指定弹出图片动画类型，默认随机
+            , anim: 5, //0-6的选择，指定弹出图片动画类型，默认随机
             shadeClose: true,
             // skin: 'layui-layer-nobg',
             shade: [0.5, '#000000'],

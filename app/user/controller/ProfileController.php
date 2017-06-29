@@ -4,6 +4,8 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
 // | Author: Powerless < wzxaini9@gmail.com>
 // +----------------------------------------------------------------------
 namespace app\user\controller;
@@ -138,7 +140,8 @@ class ProfileController extends UserBaseController
         ])->move('.' . DS . 'upload' . DS . 'avatar' . DS);
 
         if ($result) {
-            $avatar = 'avatar/' . $result->getSaveName();
+            $avatarSaveName = str_replace('//', '/', str_replace('\\', '/', $result->getSaveName()));
+            $avatar         = 'avatar/' . $avatarSaveName;
             session('avatar', $avatar);
 
             return json_encode([

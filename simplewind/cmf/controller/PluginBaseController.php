@@ -4,6 +4,8 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +---------------------------------------------------------------------
 // | Author: Dean <zxxjjforever@163.com>
 // +----------------------------------------------------------------------
 namespace cmf\controller;
@@ -14,7 +16,7 @@ use think\Config;
 use think\Loader;
 use think\exception\TemplateNotFoundException;
 
-class PluginBaseController
+class PluginBaseController extends BaseController
 {
 
     /**
@@ -65,6 +67,7 @@ class PluginBaseController
 
         if (is_null($this->plugin)) {
             $pluginName   = $this->request->param('_plugin');
+            $pluginName   = cmf_parse_name($pluginName, 1);
             $class        = cmf_get_plugin_class($pluginName);
             $this->plugin = new $class;
         }
@@ -222,7 +225,7 @@ class PluginBaseController
                 // 支持场景
                 list($validate, $scene) = explode('.', $validate);
             }
-            $v = Loader::validate($validate);
+            $v = Loader::validate('\\plugins\\' . cmf_parse_name($this->plugin->getName()) . '\\validate\\' . $validate . 'Validate');
             if (!empty($scene)) {
                 $v->scene($scene);
             }

@@ -4,6 +4,8 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
 // | Author: 老猫 <zxxjjforever@163.com>
 // +----------------------------------------------------------------------
 namespace app\admin\controller;
@@ -129,11 +131,13 @@ class PluginController extends AdminBaseController
         $id = $this->request->param('id', 0, 'intval');
 
         $pluginModel = new PluginModel();
-        $plugin      = $pluginModel->find($id)->toArray();
+        $plugin      = $pluginModel->find($id);
 
-        if (!$plugin) {
+        if (empty($plugin)) {
             $this->error('插件未安装!');
         }
+
+        $plugin = $plugin->toArray();
 
         $pluginClass = cmf_get_plugin_class($plugin['name']);
         if (!class_exists($pluginClass)) {
@@ -150,16 +154,21 @@ class PluginController extends AdminBaseController
             $pluginConfigInDb = json_decode($pluginConfigInDb, true);
             foreach ($plugin['config'] as $key => $value) {
                 if ($value['type'] != 'group') {
-                    $plugin['config'][$key]['value'] = isset($pluginConfigInDb[$key]) ? $pluginConfigInDb[$key] : $value;
+                    if (isset($pluginConfigInDb[$key])) {
+                        $plugin['config'][$key]['value'] = $pluginConfigInDb[$key];
+                    }
                 } else {
                     foreach ($value['options'] as $group => $options) {
                         foreach ($options['options'] as $gkey => $value) {
-                            $plugin['config'][$key]['options'][$group]['options'][$gkey]['value'] = isset($pluginConfigInDb[$gkey]) ? $pluginConfigInDb[$gkey] : $value;
+                            if (isset($pluginConfigInDb[$gkey])) {
+                                $plugin['config'][$key]['options'][$group]['options'][$gkey]['value'] = $pluginConfigInDb[$gkey];
+                            }
                         }
                     }
                 }
             }
         }
+
         $this->assign('data', $plugin);
 //        if ($plugin['custom_config']) {
 //            $this->assign('custom_config', $this->fetch($plugin['plugin_path'] . $plugin['custom_config']));
@@ -289,8 +298,7 @@ class PluginController extends AdminBaseController
      *     'param'  => ''
      * )
      */
-    public
-    function install()
+    public function install()
     {
         $pluginName = $this->request->param('name', '', 'trim');
         $class      = cmf_get_plugin_class($pluginName);
@@ -359,8 +367,7 @@ class PluginController extends AdminBaseController
      *     'param'  => ''
      * )
      */
-    public
-    function update()
+    public function update()
     {
         $pluginName = $this->request->param('name', '', 'trim');
         $class      = cmf_get_plugin_class($pluginName);
@@ -411,7 +418,7 @@ class PluginController extends AdminBaseController
 
         $shouldDeleteHooks = array_diff($samePluginHooks, $pluginHooksInDb);
 
-        $newHooks = array_diff($samePluginHooks, $pluginHooks);
+        $newHooks = array_diff($pluginHooks, $samePluginHooks);
 
         if (count($shouldDeleteHooks) > 0) {
             $hookPluginModel->where('hook', 'in', $shouldDeleteHooks)->delete();
@@ -437,8 +444,7 @@ class PluginController extends AdminBaseController
      *     'param'  => ''
      * )
      */
-    public
-    function uninstall()
+    public function uninstall()
     {
         $pluginModel = new PluginModel();
         $id          = $this->request->param('id', 0, 'intval');

@@ -4,6 +4,8 @@
 // +----------------------------------------------------------------------
 // | Copyright (c) 2013-2017 http://www.thinkcmf.com All rights reserved.
 // +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
 // | Author: 老猫 <thinkcmf@126.com>
 // +----------------------------------------------------------------------
 namespace app\portal\taglib;
@@ -27,7 +29,7 @@ class Portal extends TagLib
     public function tagArticles($tag, $content)
     {
         $item          = empty($tag['item']) ? 'vo' : $tag['item'];//循环变量名
-        $field         = empty($tag['field']) ? '*' : $tag['field'];
+        $field         = empty($tag['field']) ? '' : $tag['field'];
         $limit         = empty($tag['limit']) ? '10' : $tag['limit'];
         $order         = empty($tag['order']) ? 'post.published_time DESC' : $tag['order'];
         $relation      = empty($tag['relation']) ? '' : $tag['relation'];
