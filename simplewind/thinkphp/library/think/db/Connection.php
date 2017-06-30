@@ -787,13 +787,6 @@ abstract class Connection
      */
     protected function isBreak($e)
     {
-<<<<<<< HEAD
-=======
-        if (!$this->config['break_reconnect']) {
-            return false;
-        }
-
->>>>>>> 6279c03e8bd9aa1f6312868afbfe896053373d6b
         $info = [
             'server has gone away',
             'no connection to the server',

@@ -16,6 +16,8 @@ class IndexController extends HomeBaseController
 {
     public function index()
     {
+//        echo cmf_password('666666');//这次一定要记清了，密码是6个6；
+//        exit;
         return $this->fetch(':index');
     }
 }
