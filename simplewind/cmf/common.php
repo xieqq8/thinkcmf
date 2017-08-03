@@ -578,6 +578,7 @@ function cmf_send_email($address, $subject, $message)
     // 设置PHPMailer使用SMTP服务器发送Email
     $mail->IsSMTP();
     $mail->IsHTML(true);
+    //$mail->SMTPDebug = 3;
     // 设置邮件的字符编码，若不指定，则为'UTF-8'
     $mail->CharSet = 'UTF-8';
     // 添加收件人地址，可以多次使用来添加多个收件人
@@ -602,6 +603,7 @@ function cmf_send_email($address, $subject, $message)
     // 设置为"需要验证"
     $mail->SMTPAuth    = true;
     $mail->SMTPAutoTLS = false;
+    $mail->Timeout     = 10;
     // 设置用户名和密码。
     $mail->Username = $smtpSetting['username'];
     $mail->Password = $smtpSetting['password'];
@@ -1469,12 +1471,12 @@ function cmf_url($url = '', $vars = '', $suffix = true, $domain = false)
     if (!empty($vars) && !empty($routes[$url])) {
 
         foreach ($routes[$url] as $actionRoute) {
-            $sameVars = array_intersect($vars, $actionRoute['vars']);
+            $sameVars = array_intersect_assoc($vars, $actionRoute['vars']);
 
             if (count($sameVars) == count($actionRoute['vars'])) {
                 ksort($sameVars);
                 $url  = $url . '?' . http_build_query($sameVars);
-                $vars = array_diff($vars, $sameVars);
+                $vars = array_diff_assoc($vars, $sameVars);
                 break;
             }
         }
@@ -1608,4 +1610,127 @@ function cmf_curl_get($url)
     }
     $content = curl_exec($ch);
     return $content;
+}
+
+/**
+ * 用户操作记录
+ * @param string $action 用户操作
+ */
+function cmf_user_action($action)
+{
+    $userId = cmf_get_current_user_id();
+
+    if (empty($userId)) {
+        return;
+    }
+
+    $findUserAction = Db::name('user_action')->where('action', $action)->find();
+
+    if (empty($findUserAction)) {
+        return;
+    }
+
+    $changeScore = false;
+
+    if ($findUserAction['cycle_type'] == 0) {
+        $changeScore = true;
+    } elseif ($findUserAction['reward_number'] > 0) {
+        $findUserScoreLog = Db::name('user_score_log')->order('create_time DESC')->find();
+        if (!empty($findUserScoreLog)) {
+            $cycleType = intval($findUserAction['cycle_type']);
+            switch ($cycleType) {//1:按天;2:按小时;3:永久
+                case 1:
+                    $todayStartTime        = strtotime(date('Y-m-d'));
+                    $todayEndTime          = strtotime(date('Y-m-d', strtotime('+1 day')));
+                    $findUserScoreLogCount = Db::name('user_score_log')->where([
+                        'user_id'     => $userId,
+                        'create_time' => [['gt', $todayStartTime], ['lt', $todayEndTime]]
+                    ])->count();
+                    if ($findUserScoreLogCount < $findUserAction['reward_number']) {
+                        $changeScore = true;
+                    }
+                    break;
+                case 2:
+                    if (($findUserScoreLog['create_time'] + 3600) < time()) {
+                        $changeScore = true;
+                    }
+                    break;
+                case 3:
+
+                    break;
+            }
+        } else {
+            $changeScore = true;
+        }
+    }
+
+    if ($changeScore) {
+        Db::name('user_score_log')->insert([
+            'user_id'     => $userId,
+            'create_time' => time(),
+            'action'      => $action,
+            'score'       => $findUserAction['score'],
+            'coin'        => $findUserAction['coin'],
+        ]);
+
+        $data = [];
+        if ($findUserAction['score'] > 0) {
+            $data['score'] = ['exp', 'score+' . $findUserAction['score']];
+        }
+
+        if ($findUserAction['score'] < 0) {
+            $data['score'] = ['exp', 'score-' . abs($findUserAction['score'])];
+        }
+
+        if ($findUserAction['coin'] > 0) {
+            $data['coin'] = ['exp', 'coin+' . $findUserAction['coin']];
+        }
+
+        if ($findUserAction['coin'] < 0) {
+            $data['coin'] = ['exp', 'coin-' . abs($findUserAction['coin'])];
+        }
+
+        Db::name('user')->where('id', $userId)->update($data);
+
+    }
+
+
+}
+
+function cmf_api_request($url, $params = [])
+{
+    //初始化
+    $curl = curl_init();
+    //设置抓取的url
+    curl_setopt($curl, CURLOPT_URL, 'http://127.0.0.1:1314/api/' . $url);
+    //设置头文件的信息作为数据流输出
+    curl_setopt($curl, CURLOPT_HEADER, 0);
+    //设置获取的信息以文件流的形式返回，而不是直接输出。
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+    //设置post方式提交
+    curl_setopt($curl, CURLOPT_POST, 1);
+
+    $token = session('token');
+
+    curl_setopt($curl, CURLOPT_HTTPHEADER, ["XX-Token: $token"]);
+    //设置post数据
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
+    //执行命令
+    $data = curl_exec($curl);
+    //关闭URL请求
+    curl_close($curl);
+    //显示获得的数据
+
+    return json_decode($data, true);
+}
+
+/**
+ * 判断是否允许开放注册
+ */
+function cmf_is_open_registration()
+{
+
+    $cmfSettings = cmf_get_option('cmf_settings');
+
+    return empty($cmfSettings['open_registration']) ? false : true;
 }

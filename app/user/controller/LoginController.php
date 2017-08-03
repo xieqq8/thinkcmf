@@ -80,6 +80,7 @@ class LoginController extends HomeBaseController
             $redirect                   = empty($session_login_http_referer) ? $this->request->root() : $session_login_http_referer;
             switch ($log) {
                 case 0:
+                    cmf_user_action('login');
                     $this->success('登录成功', $redirect);
                     break;
                 case 1:
@@ -87,6 +88,9 @@ class LoginController extends HomeBaseController
                     break;
                 case 2:
                     $this->error('账户不存在');
+                    break;
+                case 3:
+                    $this->error('账号被禁止访问系统');
                     break;
                 default :
                     $this->error('未受理的请求');
